@@ -12,21 +12,21 @@
   "license": "MIT",
   "commands": [
     {
-      "name": "close-all",
-      "title": "Close All Open Apps",
-      "description": "Closes all open apps",
-      "mode": "no-view"
-    },
-    {
-      "name": "edit-list",
-      "title": "Edit List of Whitelisted Apps",
-      "description": "Apps that you never want to close",
+      "name": "app-list",
+      "title": "Manage Apps",
+      "description": "View and manage running applications",
       "mode": "view"
     },
     {
-      "name": "show-whitelist",
-      "title": "Show Whitelisted Apps",
-      "description": "Show the list of whitelisted apps",
+      "name": "close-all",
+      "title": "Close All",
+      "description": "Close all non-whitelisted apps",
+      "mode": "view"
+    },
+    {
+      "name": "whitelist-view",
+      "title": "View Whitelist",
+      "description": "View whitelisted applications",
       "mode": "view"
     }
   ],
