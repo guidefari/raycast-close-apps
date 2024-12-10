@@ -19,9 +19,15 @@
     },
     {
       "name": "edit-list",
-      "title": "Edit Text List",
-      "description": "Edit a text list and save it to a specified path",
-      "mode": "no-view"
+      "title": "Edit List of Whitelisted Apps",
+      "description": "Apps that you never want to close",
+      "mode": "view"
+    },
+    {
+      "name": "show-whitelist",
+      "title": "Show Whitelisted Apps",
+      "description": "Show the list of whitelisted apps",
+      "mode": "view"
     }
   ],
   "dependencies": {

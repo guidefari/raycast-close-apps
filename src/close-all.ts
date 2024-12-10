@@ -1,12 +1,12 @@
 import { showHUD } from "@raycast/api";
-import { runAppleScript, showFailureToast } from "@raycast/utils";
-import { closeAll } from "./scripts";
+import { showFailureToast } from "@raycast/utils";
+import { closeNotWhitelisted } from "./scripts";
 
 export default async function () {
-	try {
-		const res = await closeAll();
-		await showHUD(res);
-	} catch (error) {
-		showFailureToast(error, { title: "Could not run AppleScript" });
-	}
+  try {
+    const res = await closeNotWhitelisted();
+    // await showHUD(res);
+  } catch (error) {
+    showFailureToast(error, { title: "Could not run AppleScript" });
+  }
 }
