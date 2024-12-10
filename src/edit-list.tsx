@@ -16,20 +16,25 @@ export default function Command() {
   const {
     value: whitelistedApps,
     setValue: setWhitelistedApps,
-    // isLoading: isLoadingWhitelistedApps,
+    isLoading: isLoadingWhitelistedApps,
   } = useLocalStorage<string[]>("whitelistedApps", []);
 
-  console.log('whitelistedApps:', typeof whitelistedApps)
   console.log('whitelistedApps:', whitelistedApps)
+  console.log('openApps:', openApps?.length)
   
   const { handleSubmit } = useForm<SignUpFormValues>({
     onSubmit(values) {
-      setWhitelistedApps(values.selectedApps);
+      // Ensure Raycast is always included in the whitelist
+      const updatedApps = values.selectedApps.includes("Raycast") 
+        ? values.selectedApps 
+        : [...values.selectedApps, "Raycast"];
+      
+      setWhitelistedApps(updatedApps);
 
       showToast({
         style: Toast.Style.Success,
         title: "Whitelisted! These apps will not be closed when you run the main script:",
-        message: `${values.selectedApps.map((app) => `${app} `)}`,
+        message: `${updatedApps.map((app) => `${app} `)}`,
       });
     },
     validation: {
@@ -57,6 +62,7 @@ export default function Command() {
         actions={
           <ActionPanel>
             <Action.SubmitForm title="Submit" onSubmit={handleSubmit} />
+            <Action.SubmitForm title="Clear Whitelist" onSubmit={() => setWhitelistedApps([])} />
           </ActionPanel>
         }
       >
@@ -68,7 +74,7 @@ export default function Command() {
         placeholder="Enter password at least 8 characters long"
         {...itemProps.password}
       /> */}
-        {!isLoadingOpenApps && (
+        {!isLoadingOpenApps && !isLoadingWhitelistedApps && (
           <Form.TagPicker title="Whitelisted Apps" id="selectedApps" defaultValue={whitelistedApps}>
             {openApps?.map((app) => {
               return <Form.TagPicker.Item value={String(app)} title={String(app)} key={app} />;

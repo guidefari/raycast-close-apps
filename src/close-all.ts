@@ -4,7 +4,9 @@ import { closeNotWhitelisted } from "./scripts";
 
 export default async function () {
   try {
-    const res = await closeNotWhitelisted();
+      await closeNotWhitelisted();
+      showHUD('Closing all apps not whitelisted');
+    // console.log('res:', res)
     // await showHUD(res);
   } catch (error) {
     showFailureToast(error, { title: "Could not run AppleScript" });
