@@ -16,6 +16,12 @@
       "title": "Close All Open Apps",
       "description": "Closes all open apps",
       "mode": "no-view"
+    },
+    {
+      "name": "edit-list",
+      "title": "Edit Text List",
+      "description": "Edit a text list and save it to a specified path",
+      "mode": "no-view"
     }
   ],
   "dependencies": {
