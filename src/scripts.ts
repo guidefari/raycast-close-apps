@@ -27,17 +27,18 @@ export const getOpenApps = async (): Promise<string[]> => {
 		return open_apps & appNames
 	`);
 
-	const openAppsArray = openApps.split(',').map(app => app.replace(/\.app$/, '').trim());
+	const openAppsArray = openApps
+		.split(",")
+		.map((app) => app.replace(/\.app$/, "").trim());
 
 	// Deduplicate the list
-const dedupedAppsArray: string[] = [];
-	openAppsArray.forEach(app => {
+	const dedupedAppsArray: string[] = [];
+	for (const app of openAppsArray) {
 		if (!dedupedAppsArray.includes(app)) {
 			dedupedAppsArray.push(app);
 		}
-	});
+	}
 
-	return dedupedAppsArray;
 	return dedupedAppsArray;
 };
 
@@ -53,10 +54,12 @@ export const closeNotWhitelisted = async () => {
 	if (!whitelistedAppsArray.includes("Raycast")) {
 		whitelistedAppsArray.push("Raycast");
 	}
-	
-	const allowedApps = convertStringToAppleScriptFormat(JSON.stringify(whitelistedAppsArray));
-	console.log('allowedApps:', allowedApps)
-	
+
+	const allowedApps = convertStringToAppleScriptFormat(
+		JSON.stringify(whitelistedAppsArray),
+	);
+	console.log("allowedApps:", allowedApps);
+
 	const script = `
 	set allowedApps to ${allowedApps} -- Add the names of the apps you want to keep open here
 	
@@ -75,57 +78,17 @@ export const closeNotWhitelisted = async () => {
 		end try
 	end if
 	end repeat
-	`
-	return await runAppleScript(script);
-}
+	`;
+	return await runAppleScript(script, { timeout: 30000 });
+};
 
 function convertStringToAppleScriptFormat(input: string): string {
-  // Step 1: Parse the string to an array
-  const array = JSON.parse(input.replace(/'/g, '"'));
+	// Step 1: Parse the string to an array
+	const array = JSON.parse(input.replace(/'/g, '"'));
 
-  // Step 2: Trim spaces and format each element
-  const formattedArray = array.map((app: string) => `"${app.trim()}"`);
+	// Step 2: Trim spaces and format each element
+	const formattedArray = array.map((app: string) => `"${app.trim()}"`);
 
-  // Step 3: Join the elements into the desired format
-  return `{${formattedArray.join(', ')}}`;
+	// Step 3: Join the elements into the desired format
+	return `{${formattedArray.join(", ")}}`;
 }
-
-export const useScripts = () => {
-	// const [openApps, setOpenApps] = useState<string[]>([]);
-
-	// useEffect(() => {
-	// 	const getOpenApps = async () => {
-	// 		const openApps = await getOpenApps();
-	// 		setOpenApps(openApps);
-	// 	};
-	// 	getOpenApps();
-	// }, []);
-
-	return {
-		// openApps,
-		closeAll,
-		getOpenApps
-	}
-}
-
-
-// # const res = await runAppleScript(
-// # 			`
-// #     on run argv
-// #     tell application "System Events"
-// #         set appList to name of (processes where background only is false)
-// #         repeat with appName in appList
-// #             try
-// #                 tell application appName to quit
-// #             on error errMsg
-// #                 tell application "System Events"
-// #                     display notification "App " & appName & " refused to quit: " & errMsg
-// #                 end tell
-// #             end try
-// #         end repeat
-// #     end tell
-
-// #     end run
-// #     `,
-// # 			["world"],
-// # 		);
