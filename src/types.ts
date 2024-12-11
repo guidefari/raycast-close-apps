@@ -1,4 +1,4 @@
-export interface Process {
-  name: string;
-  isWhitelisted: boolean;
-} 
+export interface Application {
+	name: string;
+	isWhitelisted: boolean;
+}
