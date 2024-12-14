@@ -22,12 +22,6 @@
       "title": "Close All",
       "description": "Close all non-whitelisted apps",
       "mode": "view"
-    },
-    {
-      "name": "whitelist-view",
-      "title": "View Whitelist",
-      "description": "View whitelisted applications",
-      "mode": "view"
     }
   ],
   "dependencies": {
