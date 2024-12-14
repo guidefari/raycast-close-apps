@@ -11,12 +11,19 @@ import {
 import { getAllApps, closeNotWhitelisted } from "./scripts";
 import type { Application } from "./types";
 import { useLocalStorage, usePromise } from "@raycast/utils";
-import WhitelistView from "./whitelist-view";
+import { useState } from "react";
 
-// type ListState = "whitelisted" | "open" | "all";
+type ListState = "whitelisted" | "open" | "all";
+
+const StateToTitle: Record<ListState, string> = {
+	whitelisted: "Whitelisted Apps",
+	open: "Open Apps",
+	all: "All Apps",
+};
 
 export default function AppList() {
-	const { push } = useNavigation();
+	const [listState, setListState] = useState<ListState>("all");
+	const [apps, setApps] = useState<Application[]>([]);
 
 	const { value: whitelistedApps, setValue: setWhitelistedApps } =
 		useLocalStorage<string[]>("whitelistedApps", []);
@@ -35,10 +42,13 @@ export default function AppList() {
 				}));
 			}
 
-			return apps.map((app) => ({
+			const allApps = apps.map((app) => ({
 				name: app,
 				isWhitelisted: whitelistedApps?.includes(app) || app === "Raycast",
 			}));
+
+			setApps(allApps);
+			return allApps;
 		},
 		[whitelistedApps],
 	);
@@ -74,10 +84,39 @@ export default function AppList() {
 		}
 	};
 
+	const cycleListState = () => {
+		const states = Object.keys(StateToTitle) as ListState[];
+		const currentIndex = states.indexOf(listState);
+		const nextIndex = (currentIndex + 1) % states.length;
+		const nextState = states[nextIndex];
+		setListState(nextState);
+
+		switch (nextState) {
+			case "whitelisted":
+				setApps(
+					whitelistedApps?.map((app) => ({
+						name: app,
+						isWhitelisted: true,
+					})) || [],
+				);
+				break;
+			case "open":
+				setApps(openApps?.filter((app) => app.isWhitelisted) || []);
+				break;
+			case "all":
+			default:
+				setApps(openApps || []);
+				break;
+		}
+	};
+
 	return (
 		<List isLoading={openAppsLoading} searchBarPlaceholder="Filter apps...">
-			<List.Section title="All Apps" subtitle={`${openApps?.length} apps`}>
-				{openApps?.map((app) => (
+			<List.Section
+				title={StateToTitle[listState]}
+				subtitle={`${apps?.length} apps`}
+			>
+				{apps?.map((app) => (
 					<List.Item
 						key={app.name}
 						title={app.name}
@@ -116,7 +155,7 @@ export default function AppList() {
 									title="View Whitelist"
 									icon={Icon.List}
 									shortcut={{ modifiers: ["cmd"], key: "." }}
-									onAction={() => push(<WhitelistView />)}
+									onAction={cycleListState}
 								/>
 							</ActionPanel>
 						}
