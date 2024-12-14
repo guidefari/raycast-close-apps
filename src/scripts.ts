@@ -10,7 +10,7 @@ export const closeAll = async () => {
 	`);
 };
 
-export const getOpenApps = async (): Promise<string[]> => {
+export const getAllApps = async (): Promise<string[]> => {
 	const openApps = await runAppleScript(`
 		tell application "System Events"
 			set open_apps to name of (every process whose background only is false)

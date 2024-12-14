@@ -6,7 +6,6 @@ export default function WhitelistView() {
 		"whitelistedApps",
 		[],
 	);
-	console.log("whitelistedApps:", whitelistedApps);
 
 	return (
 		<List
