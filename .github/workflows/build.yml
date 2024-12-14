@@ -13,11 +13,8 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
-
-      - name: Set up Bun
-        uses: oven-sh/bun-install@v1
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
 
       - name: Cache Bun dependencies
         uses: actions/cache@v3
