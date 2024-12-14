@@ -1,5 +1,6 @@
 import { LocalStorage } from "@raycast/api";
 import { runAppleScript } from "@raycast/utils";
+import { exec } from "node:child_process";
 
 export const closeAll = async () => {
 	return await runAppleScript(`
@@ -14,31 +15,33 @@ export const getOpenApps = async (): Promise<string[]> => {
 	const openApps = await runAppleScript(`
 		tell application "System Events"
 			set open_apps to name of (every process whose background only is false)
+			return open_apps
 		end tell
-		
-		set appNames to {}
-		tell application "Finder"
-			set appList to (name of every application file in (path to applications folder) as alias list)
-			repeat with appName in appList
-				set end of appNames to appName
-			end repeat
-		end tell
-		
-		return open_apps & appNames
 	`);
 
-	const openAppsArray = openApps.split(',').map(app => app.replace(/\.app$/, '').trim());
+	const apps = openApps
+		.split(",")
+		.map((app) => app.replace(/\.app$/, "").trim());
+	return apps;
+};
 
-	// Deduplicate the list
-const dedupedAppsArray: string[] = [];
-	openAppsArray.forEach(app => {
-		if (!dedupedAppsArray.includes(app)) {
-			dedupedAppsArray.push(app);
-		}
+export const getAllApps = async (): Promise<string[]> => {
+	return new Promise((resolve, reject) => {
+		exec(
+			"ls /Applications /System/Applications | grep '.app$' | sed 's/\\.app$//'",
+			(error, stdout, stderr) => {
+				if (error) {
+					reject(`Error: ${stderr}`);
+					return;
+				}
+				const appNames = stdout
+					.split("\n")
+					.filter(Boolean)
+					.sort((a, b) => a.localeCompare(b));
+				resolve(appNames);
+			},
+		);
 	});
-
-	return dedupedAppsArray;
-	return dedupedAppsArray;
 };
 
 export const closeNotWhitelisted = async () => {
@@ -53,10 +56,12 @@ export const closeNotWhitelisted = async () => {
 	if (!whitelistedAppsArray.includes("Raycast")) {
 		whitelistedAppsArray.push("Raycast");
 	}
-	
-	const allowedApps = convertStringToAppleScriptFormat(JSON.stringify(whitelistedAppsArray));
-	console.log('allowedApps:', allowedApps)
-	
+
+	const allowedApps = convertStringToAppleScriptFormat(
+		JSON.stringify(whitelistedAppsArray),
+	);
+	console.log("allowedApps:", allowedApps);
+
 	const script = `
 	set allowedApps to ${allowedApps} -- Add the names of the apps you want to keep open here
 	
@@ -75,57 +80,17 @@ export const closeNotWhitelisted = async () => {
 		end try
 	end if
 	end repeat
-	`
-	return await runAppleScript(script);
-}
+	`;
+	return await runAppleScript(script, { timeout: 30000 });
+};
 
 function convertStringToAppleScriptFormat(input: string): string {
-  // Step 1: Parse the string to an array
-  const array = JSON.parse(input.replace(/'/g, '"'));
+	// Step 1: Parse the string to an array
+	const array = JSON.parse(input.replace(/'/g, '"'));
 
-  // Step 2: Trim spaces and format each element
-  const formattedArray = array.map((app: string) => `"${app.trim()}"`);
+	// Step 2: Trim spaces and format each element
+	const formattedArray = array.map((app: string) => `"${app.trim()}"`);
 
-  // Step 3: Join the elements into the desired format
-  return `{${formattedArray.join(', ')}}`;
+	// Step 3: Join the elements into the desired format
+	return `{${formattedArray.join(", ")}}`;
 }
-
-export const useScripts = () => {
-	// const [openApps, setOpenApps] = useState<string[]>([]);
-
-	// useEffect(() => {
-	// 	const getOpenApps = async () => {
-	// 		const openApps = await getOpenApps();
-	// 		setOpenApps(openApps);
-	// 	};
-	// 	getOpenApps();
-	// }, []);
-
-	return {
-		// openApps,
-		closeAll,
-		getOpenApps
-	}
-}
-
-
-// # const res = await runAppleScript(
-// # 			`
-// #     on run argv
-// #     tell application "System Events"
-// #         set appList to name of (processes where background only is false)
-// #         repeat with appName in appList
-// #             try
-// #                 tell application appName to quit
-// #             on error errMsg
-// #                 tell application "System Events"
-// #                     display notification "App " & appName & " refused to quit: " & errMsg
-// #                 end tell
-// #             end try
-// #         end repeat
-// #     end tell
-
-// #     end run
-// #     `,
-// # 			["world"],
-// # 		);

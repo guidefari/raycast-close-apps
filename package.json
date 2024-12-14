@@ -1,8 +1,8 @@
 {
   "$schema": "https://www.raycast.com/schemas/extension.json",
   "name": "close-apps",
-  "title": "Close Apps",
-  "description": "Script that closes all apps",
+  "title": "Close All Open Apps",
+  "description": "Script that closes all open apps",
   "icon": "extension-icon.png",
   "author": "guide",
   "categories": [
@@ -12,21 +12,15 @@
   "license": "MIT",
   "commands": [
     {
-      "name": "close-all",
-      "title": "Close All Open Apps",
-      "description": "Closes all open apps",
-      "mode": "no-view"
-    },
-    {
-      "name": "edit-list",
-      "title": "Edit List of Whitelisted Apps",
-      "description": "Apps that you never want to close",
+      "name": "manage-whitelist",
+      "title": "Manage Whitelist",
+      "description": "View and manage running applications",
       "mode": "view"
     },
     {
-      "name": "show-whitelist",
-      "title": "Show Whitelisted Apps",
-      "description": "Show the list of whitelisted apps",
+      "name": "close-all",
+      "title": "Close All",
+      "description": "Close all non-whitelisted apps",
       "mode": "view"
     }
   ],
