@@ -6,14 +6,18 @@ import {
 	Toast,
 	Icon,
 	Color,
+	useNavigation,
 } from "@raycast/api";
-import { getOpenApps, closeNotWhitelisted } from "./scripts";
+import { getAllApps, closeNotWhitelisted } from "./scripts";
 import type { Application } from "./types";
 import { useLocalStorage, usePromise } from "@raycast/utils";
+import WhitelistView from "./whitelist-view";
 
 // type ListState = "whitelisted" | "open" | "all";
 
 export default function AppList() {
+	const { push } = useNavigation();
+
 	const { value: whitelistedApps, setValue: setWhitelistedApps } =
 		useLocalStorage<string[]>("whitelistedApps", []);
 
@@ -23,7 +27,7 @@ export default function AppList() {
 		revalidate,
 	} = usePromise(
 		async (whitelistedApps: string[] | undefined) => {
-			const apps = await getOpenApps();
+			const apps = await getAllApps();
 			if (!whitelistedApps) {
 				return apps.map((app) => ({
 					name: app,
@@ -72,7 +76,7 @@ export default function AppList() {
 
 	return (
 		<List isLoading={openAppsLoading} searchBarPlaceholder="Filter apps...">
-			<List.Section title="Running Apps" subtitle={`${openApps?.length} apps`}>
+			<List.Section title="All Apps" subtitle={`${openApps?.length} apps`}>
 				{openApps?.map((app) => (
 					<List.Item
 						key={app.name}
@@ -107,6 +111,12 @@ export default function AppList() {
 									icon={Icon.ArrowClockwise}
 									onAction={revalidate}
 									shortcut={{ modifiers: ["cmd"], key: "r" }}
+								/>
+								<Action
+									title="View Whitelist"
+									icon={Icon.List}
+									shortcut={{ modifiers: ["cmd"], key: "." }}
+									onAction={() => push(<WhitelistView />)}
 								/>
 							</ActionPanel>
 						}
