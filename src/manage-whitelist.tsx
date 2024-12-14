@@ -8,10 +8,11 @@ import {
 	Color,
 	useNavigation,
 } from "@raycast/api";
-import { getAllApps, closeNotWhitelisted } from "./scripts";
+import { getAllApps, closeNotWhitelisted, getOpenApps } from "./scripts";
 import type { Application } from "./types";
 import { useLocalStorage, usePromise } from "@raycast/utils";
-import { useState } from "react";
+import { useMemo, useState } from "react";
+import fs from "node:fs";
 
 type ListState = "whitelisted" | "open" | "all";
 
@@ -23,14 +24,13 @@ const StateToTitle: Record<ListState, string> = {
 
 export default function AppList() {
 	const [listState, setListState] = useState<ListState>("all");
-	const [apps, setApps] = useState<Application[]>([]);
 
 	const { value: whitelistedApps, setValue: setWhitelistedApps } =
 		useLocalStorage<string[]>("whitelistedApps", []);
 
 	const {
-		data: openApps,
-		isLoading: openAppsLoading,
+		data: allApps,
+		isLoading: allAppsLoading,
 		revalidate,
 	} = usePromise(
 		async (whitelistedApps: string[] | undefined) => {
@@ -47,11 +47,35 @@ export default function AppList() {
 				isWhitelisted: whitelistedApps?.includes(app) || app === "Raycast",
 			}));
 
-			setApps(allApps);
 			return allApps;
 		},
 		[whitelistedApps],
 	);
+
+	const { data: openApps, isLoading: openAppsLoading } =
+		usePromise(async () => {
+			const openApps = await getOpenApps();
+			return openApps.map((app) => ({
+				name: app,
+				isWhitelisted: whitelistedApps?.includes(app) || app === "Raycast",
+			}));
+		}, []);
+
+	const apps = useMemo(() => {
+		switch (listState) {
+			case "all":
+				return allApps;
+			case "open":
+				return openApps;
+			case "whitelisted":
+				return whitelistedApps?.map((app) => ({
+					name: app,
+					isWhitelisted: true,
+				}));
+			default:
+				return [];
+		}
+	}, [listState, allApps, openApps, whitelistedApps]);
 
 	const toggleWhitelist = (application: Application) => {
 		const newWhitelist = application.isWhitelisted
@@ -90,28 +114,26 @@ export default function AppList() {
 		const nextIndex = (currentIndex + 1) % states.length;
 		const nextState = states[nextIndex];
 		setListState(nextState);
+	};
 
-		switch (nextState) {
-			case "whitelisted":
-				setApps(
-					whitelistedApps?.map((app) => ({
-						name: app,
-						isWhitelisted: true,
-					})) || [],
-				);
-				break;
-			case "open":
-				setApps(openApps?.filter((app) => app.isWhitelisted) || []);
-				break;
-			case "all":
-			default:
-				setApps(openApps || []);
-				break;
-		}
+	const extractIcon = (app: string) => {
+		const applicationPaths = [
+			`/Applications/${app}.app`,
+			`/System/Applications/${app}.app`,
+		];
+		return (
+			applicationPaths.find((path) => {
+				try {
+					return fs.existsSync(path);
+				} catch {
+					return false;
+				}
+			}) || `/Applications/${app}.app`
+		);
 	};
 
 	return (
-		<List isLoading={openAppsLoading} searchBarPlaceholder="Filter apps...">
+		<List isLoading={allAppsLoading} searchBarPlaceholder="Filter apps...">
 			<List.Section
 				title={StateToTitle[listState]}
 				subtitle={`${apps?.length} apps`}
@@ -120,7 +142,7 @@ export default function AppList() {
 					<List.Item
 						key={app.name}
 						title={app.name}
-						icon={{ fileIcon: `/Applications/${app.name}.app` }}
+						icon={{ fileIcon: extractIcon(app.name) }}
 						accessories={[
 							{
 								icon: app.isWhitelisted
@@ -140,6 +162,7 @@ export default function AppList() {
 									icon={app.isWhitelisted ? Icon.Shield : Icon.Shield}
 									onAction={() => toggleWhitelist(app)}
 								/>
+
 								<Action
 									title="Close Non-whitelisted Apps"
 									icon={Icon.XMarkCircle}
