@@ -1,5 +1,6 @@
 import { LocalStorage } from "@raycast/api";
 import { runAppleScript } from "@raycast/utils";
+import { exec } from "node:child_process";
 
 export const closeAll = async () => {
 	return await runAppleScript(`
@@ -10,36 +11,37 @@ export const closeAll = async () => {
 	`);
 };
 
-export const getAllApps = async (): Promise<string[]> => {
+export const getOpenApps = async (): Promise<string[]> => {
 	const openApps = await runAppleScript(`
 		tell application "System Events"
 			set open_apps to name of (every process whose background only is false)
+			return open_apps
 		end tell
-		
-		set appNames to {}
-		tell application "Finder"
-			set appList to (name of every application file in (path to applications folder) as alias list)
-			repeat with appName in appList
-				set end of appNames to appName
-			end repeat
-		end tell
-		
-		return open_apps & appNames
 	`);
 
-	const openAppsArray = openApps
+	const apps = openApps
 		.split(",")
 		.map((app) => app.replace(/\.app$/, "").trim());
+	return apps;
+};
 
-	// Deduplicate the list
-	const dedupedAppsArray: string[] = [];
-	for (const app of openAppsArray) {
-		if (!dedupedAppsArray.includes(app)) {
-			dedupedAppsArray.push(app);
-		}
-	}
-
-	return dedupedAppsArray;
+export const getAllApps = async (): Promise<string[]> => {
+	return new Promise((resolve, reject) => {
+		exec(
+			"ls /Applications /System/Applications | grep '.app$' | sed 's/\\.app$//'",
+			(error, stdout, stderr) => {
+				if (error) {
+					reject(`Error: ${stderr}`);
+					return;
+				}
+				const appNames = stdout
+					.split("\n")
+					.filter(Boolean)
+					.sort((a, b) => a.localeCompare(b));
+				resolve(appNames);
+			},
+		);
+	});
 };
 
 export const closeNotWhitelisted = async () => {
