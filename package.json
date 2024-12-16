@@ -3,7 +3,7 @@
   "name": "close-apps",
   "title": "Close All Open Apps",
   "description": "Script that closes all open apps",
-  "icon": "extension-icon.png",
+  "icon": "close-all.png",
   "author": "guide",
   "categories": [
     "Productivity",
