@@ -21,7 +21,7 @@
       "name": "close-all",
       "title": "Close All",
       "description": "Close all non-whitelisted apps",
-      "mode": "view"
+      "mode": "no-view"
     }
   ],
   "dependencies": {

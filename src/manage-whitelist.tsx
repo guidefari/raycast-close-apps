@@ -52,14 +52,16 @@ export default function AppList() {
 		[whitelistedApps],
 	);
 
-	const { data: openApps, isLoading: openAppsLoading } =
-		usePromise(async () => {
+	const { data: openApps, isLoading: openAppsLoading } = usePromise(
+		async (whitelistedApps: string[] | undefined) => {
 			const openApps = await getOpenApps();
 			return openApps.map((app) => ({
 				name: app,
 				isWhitelisted: whitelistedApps?.includes(app) || app === "Raycast",
 			}));
-		}, []);
+		},
+		[whitelistedApps],
+	);
 
 	const apps = useMemo(() => {
 		switch (listState) {

@@ -21,7 +21,8 @@ export const getOpenApps = async (): Promise<string[]> => {
 
 	const apps = openApps
 		.split(",")
-		.map((app) => app.replace(/\.app$/, "").trim());
+		.map((app) => app.replace(/\.app$/, "").trim())
+		.filter((app) => app !== "stable");
 	return apps;
 };
 
