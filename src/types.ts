@@ -1,4 +1,4 @@
 export interface Application {
-	name: string;
-	isWhitelisted: boolean;
+  name: string;
+  isWhitelisted: boolean;
 }
