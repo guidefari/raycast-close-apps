@@ -52,7 +52,7 @@ export const closeNotWhitelisted = async () => {
   const whitelistedAppsArray = JSON.parse(whitelistedApps.replace(/'/g, '"'));
 
   const whitelistedAppsFormatted = convertStringToAppleScriptFormat(JSON.stringify(whitelistedAppsArray));
-  const systemWhitelistFormatted = systemWhitelist.map(app => `"${app}"`).join(", ");
+  const systemWhitelistFormatted = systemWhitelist.map((app) => `"${app}"`).join(", ");
 
   const script = `
 	set allowedApps to {${whitelistedAppsFormatted}, ${systemWhitelistFormatted}}
