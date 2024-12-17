@@ -5,14 +5,6 @@ import { useLocalStorage, usePromise } from "@raycast/utils";
 import { useMemo, useState } from "react";
 import fs from "node:fs";
 
-type ListState = "whitelisted" | "open" | "all";
-
-const StateToTitle: Record<ListState, string> = {
-  whitelisted: "Whitelisted Apps",
-  open: "Open Apps",
-  all: "All Apps",
-};
-
 export default function AppList() {
   const [listState, setListState] = useState<ListState>("all");
 
@@ -100,13 +92,21 @@ export default function AppList() {
     }
   };
 
-  const cycleListState = () => {
+  const getAdjacentListState = (currentState: ListState, type: "next" | "prev") => {
     const states = Object.keys(StateToTitle) as ListState[];
-    const currentIndex = states.indexOf(listState);
-    const nextIndex = (currentIndex + 1) % states.length;
-    const nextState = states[nextIndex];
+    const currentIndex = states.indexOf(currentState);
+    const nextIndex =
+      type === "next" ? (currentIndex + 1) % states.length : (currentIndex - 1 + states.length) % states.length;
+    return states[nextIndex];
+  };
+
+  const cycleListState = () => {
+    const nextState = getAdjacentListState(listState, "next");
     setListState(nextState);
   };
+
+  const nextStateTitle = `Show ${StateToTitle[getAdjacentListState(listState, "next")]}`;
+  const prevStateTitle = `Show ${StateToTitle[getAdjacentListState(listState, "prev")]}`;
 
   const extractIcon = (app: string) => {
     const applicationPaths = [`/Applications/${app}.app`, `/System/Applications/${app}.app`];
@@ -122,7 +122,19 @@ export default function AppList() {
   };
 
   return (
-    <List isLoading={allAppsLoading || openAppsLoading} searchBarPlaceholder="Filter apps...">
+    <List
+      navigationTitle={StateToTitle[listState]}
+      isLoading={allAppsLoading || openAppsLoading}
+      searchBarPlaceholder="Filter apps..."
+      actions={
+        <ActionPanel>
+          <ActionPanel.Section title="Navigation">
+            <CycleListState title={nextStateTitle} action={cycleListState} type="next" />
+            <CycleListState title={prevStateTitle} action={cycleListState} type="prev" />
+          </ActionPanel.Section>
+        </ActionPanel>
+      }
+    >
       <List.Section title={StateToTitle[listState]} subtitle={`${apps?.length} apps`}>
         {apps?.map((app) => (
           <List.Item
@@ -139,25 +151,29 @@ export default function AppList() {
             ]}
             actions={
               <ActionPanel>
-                <Action
-                  title={app.isWhitelisted ? "Remove from Whitelist" : "Add to Whitelist"}
-                  icon={app.isWhitelisted ? Icon.Shield : Icon.Shield}
-                  onAction={() => toggleWhitelist(app)}
-                />
+                <ActionPanel.Section title="Actions">
+                  <Action
+                    title={app.isWhitelisted ? "Remove from Whitelist" : "Add to Whitelist"}
+                    icon={app.isWhitelisted ? Icon.Shield : Icon.Shield}
+                    onAction={() => toggleWhitelist(app)}
+                  />
 
-                <Action title="Close Non-whitelisted Apps" icon={Icon.XMarkCircle} onAction={closeAllNonWhitelisted} />
-                <Action
-                  title="Refresh"
-                  icon={Icon.ArrowClockwise}
-                  onAction={revalidate}
-                  shortcut={{ modifiers: ["cmd"], key: "r" }}
-                />
-                <Action
-                  title="View Whitelist"
-                  icon={Icon.List}
-                  shortcut={{ modifiers: ["cmd"], key: "." }}
-                  onAction={cycleListState}
-                />
+                  <Action
+                    title="Close Non-whitelisted Apps"
+                    icon={Icon.XMarkCircle}
+                    onAction={closeAllNonWhitelisted}
+                  />
+                  <Action
+                    title="Refresh"
+                    icon={Icon.ArrowClockwise}
+                    onAction={revalidate}
+                    shortcut={{ modifiers: ["cmd"], key: "r" }}
+                  />
+                </ActionPanel.Section>
+                <ActionPanel.Section title="Navigation">
+                  <CycleListState title={nextStateTitle} action={cycleListState} type="next" />
+                  <CycleListState title={prevStateTitle} action={cycleListState} type="prev" />
+                </ActionPanel.Section>
               </ActionPanel>
             }
           />
@@ -166,3 +182,28 @@ export default function AppList() {
     </List>
   );
 }
+
+type CycleListStateProps = {
+  title: string;
+  action: () => void;
+  type?: "next" | "prev";
+};
+
+const CycleListState = ({ title, action, type = "next" }: CycleListStateProps) => {
+  return (
+    <Action
+      title={title}
+      icon={Icon.List}
+      shortcut={{ modifiers: ["shift"], key: type === "next" ? "." : "," }}
+      onAction={action}
+    />
+  );
+};
+
+type ListState = "whitelisted" | "open" | "all";
+
+const StateToTitle: Record<ListState, string> = {
+  whitelisted: "Whitelisted Apps",
+  open: "Open Apps",
+  all: "All Apps",
+};
