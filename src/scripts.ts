@@ -22,7 +22,7 @@ export const getOpenApps = async (): Promise<string[]> => {
   const apps = openApps
     .split(",")
     .map((app) => app.replace(/\.app$/, "").trim())
-    .filter((app) => app !== "stable");
+    .filter((app) => !systemWhitelist.includes(app));
   return apps;
 };
 
@@ -49,44 +49,36 @@ export const closeNotWhitelisted = async () => {
     return;
   }
 
-  // Parse the whitelisted apps and ensure Raycast is included
   const whitelistedAppsArray = JSON.parse(whitelistedApps.replace(/'/g, '"'));
-  if (!whitelistedAppsArray.includes("Raycast")) {
-    whitelistedAppsArray.push("Raycast");
-  }
 
-  const allowedApps = convertStringToAppleScriptFormat(JSON.stringify(whitelistedAppsArray));
-  console.log("allowedApps:", allowedApps);
+  const whitelistedAppsFormatted = convertStringToAppleScriptFormat(JSON.stringify(whitelistedAppsArray));
+  const systemWhitelistFormatted = systemWhitelist.map(app => `"${app}"`).join(", ");
 
   const script = `
-	set allowedApps to ${allowedApps} -- Add the names of the apps you want to keep open here
-	
+	set allowedApps to {${whitelistedAppsFormatted}, ${systemWhitelistFormatted}}
 	tell application "System Events"
-	set activeApps to name of (every process whose background only is false and name is not "stable")
+	set activeApps to name of (every process whose background only is false)
 	end tell
 	
 	repeat with appName in activeApps
-	if (allowedApps does not contain appName) and (appName is not "Finder") then
-		try
-			tell application appName
-				quit
-			end tell
-		on error
-			-- Handle the error or log it if necessary
-		end try
-	end if
+		if (allowedApps does not contain appName) and (appName is not "Finder") then
+			try
+				tell application appName
+					quit
+				end tell
+			on error
+				error "An error occurred while trying to quit " & appName
+			end try
+		end if
 	end repeat
 	`;
   return await runAppleScript(script, { timeout: 30000 });
 };
 
 function convertStringToAppleScriptFormat(input: string): string {
-  // Step 1: Parse the string to an array
   const array = JSON.parse(input.replace(/'/g, '"'));
 
-  // Step 2: Trim spaces and format each element
-  const formattedArray = array.map((app: string) => `"${app.trim()}"`);
-
-  // Step 3: Join the elements into the desired format
-  return `{${formattedArray.join(", ")}}`;
+  return array.map((app: string) => `"${app.trim()}"`).join(", ");
 }
+
+const systemWhitelist = ["Raycast", "Finder", "Electron", "stable", "osascript"];
